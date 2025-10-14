@@ -1,0 +1,6 @@
+
+port = 3322
+[debugger_cli_options]
+enable = true
+code_path = "/Users/mashengyuan/Project/delete/tstapi/.dev/index-1760446224328.js"
+conf_path = "/Users/mashengyuan/.ew2/er.conf"

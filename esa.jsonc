@@ -1,0 +1,7 @@
+{
+  "name": "tstapi",
+  "entry": "./index.js",
+  "dev": {
+    "port": 18080
+  }
+}
