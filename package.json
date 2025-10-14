@@ -1,0 +1,15 @@
+{
+  "name": "openai-compatible-worker",
+  "version": "1.0.0",
+  "description": "A Cloudflare Worker that provides an OpenAI-compatible API for iron.cx.",
+  "main": "index.js",
+  "scripts": {
+    "start": "wrangler dev",
+    "deploy": "wrangler publish"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}
