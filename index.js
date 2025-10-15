@@ -1,5 +1,4 @@
 "use strict";
-
 const MODELS = [
   "perplexity/sonar",
   "google/gemini-2.5-flash",
@@ -10,30 +9,30 @@ const MODELS = [
   "anthropic/claude-3-haiku-20240307",
   "openai/gpt-4o-mini",
 ];
-
 export default {
   async fetch(request, env, ctx) {
     try {
-      return new Response("Hello, world!");
+      return await handleRequest(request);
     } catch (err) {
       return new Response("cfworker error:\n" + err.stack, { status: 502 });
     }
   },
 };
-
 async function handleRequest(request) {
-  const url = new URL(request.url);
-  const path = url.pathname;
-
-  if (path === "/v1/models") {
-    return handleModelsRequest();
-  } else if (path === "/v1/chat/completions") {
-    return handleChatCompletionsRequest(request);
-  } else {
-    return new Response("Not Found", { status: 404 });
+  try {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    if (path === "/v1/models") {
+      return handleModelsRequest();
+    } else if (path === "/v1/chat/completions") {
+      return handleChatCompletionsRequest(request);
+    } else {
+      return new Response("Not Found", { status: 404 });
+    }
+  } catch (err) {
+    return new Response("error:\n" + err.stack, { status: 502 });
   }
 }
-
 function handleModelsRequest() {
   const data = MODELS.map((model) => ({
     id: model,
@@ -41,20 +40,16 @@ function handleModelsRequest() {
     created: Date.now(),
     owned_by: "organization-owner",
   }));
-
   return new Response(JSON.stringify({ object: "list", data }), {
     headers: { "Content-Type": "application/json" },
   });
 }
-
 async function handleChatCompletionsRequest(request) {
   if (request.method !== "POST") {
     return new Response("Method Not Allowed", { status: 405 });
   }
-
   const requestBody = await request.json();
   const stream = requestBody.stream || false;
-
   // 1. Get anon user token
   const anonUserId = `anon_${crypto.randomUUID()}`;
   const anonUserResponse = await fetch(
@@ -74,20 +69,16 @@ async function handleChatCompletionsRequest(request) {
       }),
     }
   );
-
   if (!anonUserResponse.ok) {
     return new Response("Failed to get anonymous user token", { status: 500 });
   }
-
   const anonUserData = await anonUserResponse.json();
   const token = anonUserData.token;
-
   // 2. Forward to chat completions
   const chatCompletionsBody = {
     ...requestBody,
     stream: true, // Always stream from the backend
   };
-
   const chatCompletionsResponse = await fetch(
     "https://www.iron.cx/api/v1/chat/completions",
     {
@@ -101,11 +92,9 @@ async function handleChatCompletionsRequest(request) {
       body: JSON.stringify(chatCompletionsBody),
     }
   );
-
   if (!chatCompletionsResponse.ok) {
     return new Response("Failed to get chat completions", { status: 500 });
   }
-
   if (stream) {
     // Handle streaming response
     const { readable, writable } = new TransformStream();
@@ -113,9 +102,7 @@ async function handleChatCompletionsRequest(request) {
     const reader = chatCompletionsResponse.body.getReader();
     const decoder = new TextDecoder();
     const encoder = new TextEncoder();
-
     let buffer = "";
-
     const processText = async () => {
       while (true) {
         const { done, value } = await reader.read();
@@ -123,11 +110,9 @@ async function handleChatCompletionsRequest(request) {
           writer.close();
           break;
         }
-
         buffer += decoder.decode(value, { stream: true });
         const lines = buffer.split("\n");
         buffer = lines.pop();
-
         for (const line of lines) {
           if (line.startsWith("data: ")) {
             const data = line.substring(6);
@@ -160,9 +145,7 @@ async function handleChatCompletionsRequest(request) {
         }
       }
     };
-
     processText();
-
     return new Response(readable, {
       headers: {
         "Content-Type": "text/event-stream",
@@ -176,14 +159,11 @@ async function handleChatCompletionsRequest(request) {
     const decoder = new TextDecoder();
     let fullText = "";
     let finalJson = null;
-
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
       const chunk = decoder.decode(value);
       const lines = chunk.split("\n");
-
       for (const line of lines) {
         if (line.startsWith("data: ")) {
           const data = line.substring(6);
@@ -203,7 +183,6 @@ async function handleChatCompletionsRequest(request) {
         }
       }
     }
-
     if (finalJson) {
       const openaiResponse = {
         id: finalJson.responseMessageId,
