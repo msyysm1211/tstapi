@@ -24,8 +24,6 @@ async function handleRequest(request) {
     const path = url.pathname;
     if (path === "/v1/models") {
       return handleModelsRequest();
-    } else if (path === "/v1/chat/completions") {
-      return handleChatCompletionsRequest(request);
     } else {
       return new Response("Not Found", { status: 404 });
     }
