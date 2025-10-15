@@ -2,22 +2,48 @@
 var MODELS = ["perplexity/sonar", "google/gemini-2.5-flash", "google/gemini-2.0-flash", "openai/gpt-4.1-nano", "togetherai/Meta-Llama-3.1-70B-Instruct-Turbo", "google/gemini-1.5-flash-latest", "anthropic/claude-3-haiku-20240307", "openai/gpt-4o-mini"];
 var tstapi_default = {
   async fetch(request, env, ctx) {
-    const data = MODELS.map(model => ({
-      id: model,
-      object: "model",
-      created: Date.now(),
-      owned_by: "organization-owner"
-    }));
-    return new Response(JSON.stringify({
-      object: "list",
-      data
-    }), {
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
+    try {
+      return await handleRequest(request);
+    } catch (err2) {
+      return new Response("cfworker error:\n" + err2.stack, {
+        status: 502
+      });
+    }
   }
 };
+async function handleRequest(request) {
+  try {
+    const url = new URL(request.url);
+    const path = url.pathname;
+    if (path === "/v1/models") {
+      return handleModelsRequest();
+    } else {
+      return new Response("Not Found", {
+        status: 404
+      });
+    }
+  } catch (err2) {
+    return new Response("error:\n" + err2.stack, {
+      status: 502
+    });
+  }
+}
+function handleModelsRequest() {
+  const data = MODELS.map(model => ({
+    id: model,
+    object: "model",
+    created: Date.now(),
+    owned_by: "organization-owner"
+  }));
+  return new Response(JSON.stringify({
+    object: "list",
+    data
+  }), {
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+}
 
 // .dev/mock/cache.js
 var MockCache = class {
@@ -252,10 +278,10 @@ var mockKV = class _EdgeKV {
 };
 var kv_default = mockKV;
 
-// .dev/devEntry-1760446224328.js
+// .dev/devEntry-1760517858866.js
 var mock_cache = new cache_default(18080);
 globalThis.mockCache = mock_cache;
 kv_default.port = 18080;
 globalThis.mockKV = kv_default;
-var devEntry_1760446224328_default = tstapi_default;
-export { devEntry_1760446224328_default as default };
+var devEntry_1760517858866_default = tstapi_default;
+export { devEntry_1760517858866_default as default };
