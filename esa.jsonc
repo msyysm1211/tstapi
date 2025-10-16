@@ -1,6 +1,6 @@
 {
   "name": "tstapi-2",
-  "entry": "./index.js",
+  "entry": "./src/index.js",
   "dev": {
     "port": 18080
   }

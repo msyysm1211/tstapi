@@ -1,0 +1,5 @@
+name = "tstapi-2"
+entry = "./index.js"
+
+[dev]
+port = 18080
